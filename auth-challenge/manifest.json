@@ -1,7 +1,7 @@
 {
-  "vendor": "vtex",
-  "name": "auth-challenge",
-  "version": "1.1.1",
+  "vendor": "iotrussardi",
+  "name": "vip-auth-challenge",
+  "version": "0.0.1",
   "title": "Challenge block for Store Framework",
   "description": "",
   "builders": {
