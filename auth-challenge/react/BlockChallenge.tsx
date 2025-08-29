@@ -21,7 +21,7 @@ const isSessionForbidden = (
 ): session is SessionForbidden =>
   (session as SessionForbidden)?.type?.toLowerCase() === 'forbidden'
 
-const isProfileAllowed = (sessionResponse: SessionResponse | undefined, listaVIPs: string) => {
+const isProfileAllowed = (sessionResponse: SessionResponse | undefined) => {
   if (sessionResponse == null) {
     return null
   }
@@ -30,10 +30,6 @@ const isProfileAllowed = (sessionResponse: SessionResponse | undefined, listaVIP
     ?.channel
 
   const isLoggedIn = (sessionResponse as Session).namespaces?.profile?.email
-
-  const email = (sessionResponse as any).namespaces?.profile?.email?.value;
-
-  console.log(listaVIPs.includes(email))
 
   if (isLoggedIn && hasAccessToTradePolicy) {
     return 'authorized'
@@ -46,29 +42,20 @@ const isProfileAllowed = (sessionResponse: SessionResponse | undefined, listaVIP
   return 'unauthorized'
 }
 
-interface Props {
-  listaVIPs: string
-}
-
-const BlockChallenge = (props: Props) => {
+const BlockChallenge = () => {
   const [isVip, setIsVip] = useState<boolean | null>(null)
 
   const fetchVip = async (sessionResponsevip: any ) => {
     const email = (sessionResponsevip as any).namespaces?.profile?.email?.value;
 
     try {
-      const { data } = await axios(
-        `/api/dataentities/PV/search?email=${email}&_fields=email`
-      )
-
+      const { data } = await axios(`/api/dataentities/PV/search?email=${email}&_fields=email`)
       if (data.length) {
         setIsVip(true)
       }
     } catch {
     }
   }
-
-  const { listaVIPs } = props
 
   const sessionResponse = useSessionResponse()
 
@@ -80,7 +67,7 @@ const BlockChallenge = (props: Props) => {
 
   const isUnauthorized = isSessionUnauthorized(sessionResponse)
   const isForbidden = isSessionForbidden(sessionResponse)
-  const profileCondition = isProfileAllowed(sessionResponse, listaVIPs)
+  const profileCondition = isProfileAllowed(sessionResponse)
 
   if (!sessionResponse) {
     return null
@@ -101,24 +88,6 @@ const BlockChallenge = (props: Props) => {
   }
 
   return <ExtensionPoint id="challenge-content" />
-}
-
-BlockChallenge.defaultProps = {
-  listaVIPs: "joaoeduardo.lolis@corebiz.ag",
-};
-
-BlockChallenge.schema = {
-  title: 'Lista VIPS',
-  type: 'object',
-  properties: {
-    listaVIPs: {
-      title: 'Lista VIPS',
-      type: 'string',
-      widget: {
-       'ui:widget': 'textarea'
-      }
-    },
-  },
 }
 
 export default BlockChallenge
