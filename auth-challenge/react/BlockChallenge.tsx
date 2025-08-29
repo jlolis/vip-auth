@@ -1,4 +1,6 @@
-import React from 'react'
+import axios from 'axios'
+
+import React, { useState, useEffect } from 'react'
 import {
   ExtensionPoint,
   Session,
@@ -19,7 +21,7 @@ const isSessionForbidden = (
 ): session is SessionForbidden =>
   (session as SessionForbidden)?.type?.toLowerCase() === 'forbidden'
 
-const isProfileAllowed = (sessionResponse: SessionResponse | undefined) => {
+const isProfileAllowed = (sessionResponse: SessionResponse | undefined, listaVIPs: string) => {
   if (sessionResponse == null) {
     return null
   }
@@ -28,6 +30,10 @@ const isProfileAllowed = (sessionResponse: SessionResponse | undefined) => {
     ?.channel
 
   const isLoggedIn = (sessionResponse as Session).namespaces?.profile?.email
+
+  const email = (sessionResponse as any).namespaces?.profile?.email?.value;
+
+  console.log(listaVIPs.includes(email))
 
   if (isLoggedIn && hasAccessToTradePolicy) {
     return 'authorized'
@@ -40,17 +46,46 @@ const isProfileAllowed = (sessionResponse: SessionResponse | undefined) => {
   return 'unauthorized'
 }
 
-const BlockChallenge = () => {
+interface Props {
+  listaVIPs: string
+}
+
+const BlockChallenge = (props: Props) => {
+  const [isVip, setIsVip] = useState<boolean | null>(null)
+
+  const fetchVip = async (sessionResponsevip: any ) => {
+    const email = (sessionResponsevip as any).namespaces?.profile?.email?.value;
+
+    try {
+      const { data } = await axios(
+        `/api/dataentities/PV/search?email=${email}&_fields=email`
+      )
+
+      if (data.length) {
+        setIsVip(true)
+      }
+    } catch {
+    }
+  }
+
+  const { listaVIPs } = props
+
   const sessionResponse = useSessionResponse()
+
+  useEffect(() => {
+    if (!isVip){
+      fetchVip(sessionResponse)
+    } 
+  }, [fetchVip, isVip])
 
   const isUnauthorized = isSessionUnauthorized(sessionResponse)
   const isForbidden = isSessionForbidden(sessionResponse)
-  const profileCondition = isProfileAllowed(sessionResponse)
+  const profileCondition = isProfileAllowed(sessionResponse, listaVIPs)
 
   if (!sessionResponse) {
     return null
   }
-
+  
   const defaultHidden = sessionResponse == null
 
   if (
@@ -58,12 +93,32 @@ const BlockChallenge = () => {
     isUnauthorized === true ||
     isForbidden === true ||
     profileCondition === 'unauthorized' ||
-    profileCondition === 'forbidden'
+    profileCondition === 'forbidden' ||
+    isVip === null ||
+    !isVip
   ) {
     return <ExtensionPoint id="challenge-fallback" />
   }
 
   return <ExtensionPoint id="challenge-content" />
+}
+
+BlockChallenge.defaultProps = {
+  listaVIPs: "joaoeduardo.lolis@corebiz.ag",
+};
+
+BlockChallenge.schema = {
+  title: 'Lista VIPS',
+  type: 'object',
+  properties: {
+    listaVIPs: {
+      title: 'Lista VIPS',
+      type: 'string',
+      widget: {
+       'ui:widget': 'textarea'
+      }
+    },
+  },
 }
 
 export default BlockChallenge

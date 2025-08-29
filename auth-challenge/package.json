@@ -26,5 +26,8 @@
   "intl-equalizer": {
     "referenceLocale": "en",
     "localeDirectory": "messages"
+  },
+  "dependencies": {
+    "axios": "^1.11.0"
   }
 }
