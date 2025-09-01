@@ -1,7 +1,7 @@
 {
   "vendor": "iotrussardi",
   "name": "vip-auth-challenge",
-  "version": "0.0.5",
+  "version": "1.0.0",
   "title": "Challenge block for Store Framework",
   "description": "",
   "builders": {
